@@ -1,0 +1,85 @@
+Table roles {
+  id int [pk,increment]
+  name varchar(255) [not null]
+  description varchar(255)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `onUpdate()`]
+  deleted_at timestamp [default: null]
+}
+
+Table users {
+  id int [pk, increment]
+  name varchar (225)
+  role varchar(100)
+  email varchar(255)
+  password varchar(255)
+  created_at timestamp [default: `now()`]
+}
+
+Table rooms {
+  id int [pk, increment]
+  name varchar(100)
+  description varchar(255)
+  price decimal(50,2)
+  capacity varchar(255)
+  amenities varchar(255)
+  photos varchar(255)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  deleted_at timestamp [default: `now()`]
+}
+
+Table room_availability {
+  id int [pk, increment]
+  room_id int [ref: > rooms.id]
+  date date
+  is_available boolean
+}
+
+Table bookings {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  room_id int [ref: > rooms.id]
+  check_in date
+  check_out date
+  status varchar(255)
+  total_price decimal(100,2)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table payments {
+  id int [pk, increment]
+  booking_id int [ref: > bookings.id]
+  amount decimal(100,2)
+  status varchar(255)
+  transaction_id varchar(255)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table guests {
+  id int [pk,increment]
+  user_id int [ref: > users.id]
+  phone varchar(255)
+  address varchar(255)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table permissions {
+  id int [pk,increment]
+  name varchar(255) [not null]
+  description varchar(255)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table role_permissions {
+  id int [pk,increment]
+  role_id int [ref: >roles.id]
+  permissiom_id int [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+}
