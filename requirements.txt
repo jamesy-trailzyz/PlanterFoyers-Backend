@@ -8,3 +8,6 @@ passlib[bcrypt]
 python-multipart
 pydantic
 email-validator
+pydantic-settings
+pymysql
+python-jose[cryptography]

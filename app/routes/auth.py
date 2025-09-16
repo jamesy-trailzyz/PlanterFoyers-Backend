@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import time
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status, APIRouter
@@ -10,30 +11,20 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import get_db
 from app.config import settings
+from app.utils.security import get_password_hash, verify_password
+
 
 # -------------------
 # Security
 # -------------------
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-
-
-# -------------------
-# Password utils
-# -------------------
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
 
 # -------------------
 # JWT utils
@@ -78,7 +69,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     access_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"success": True, "message": "User authenticated successfully.","access_token": access_token, "token_type": "bearer", "user": {"name": user.name,"email": user.email,"slug":user.slug}}
 
 
 @router.post("/register", response_model=schemas.UserOut)
@@ -88,10 +79,13 @@ def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_pw = get_password_hash(user_in.password)
+    slug = f"{user_in.name.lower().replace(' ','-')}-{int(time.time())}"
+
     new_user = models.User(
         name=user_in.name,
         email=user_in.email,
         password=hashed_pw,
+        slug=slug
     )
     db.add(new_user)
     db.commit()

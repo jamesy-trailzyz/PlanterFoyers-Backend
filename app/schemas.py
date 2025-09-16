@@ -49,6 +49,7 @@ class RolePermissionOut(BaseModel):
 class UserBase(BaseModel):
     name: Optional[str] = None
     email: EmailStr
+    slug: Optional[str]
 
 class UserCreate(UserBase):
     password: str
@@ -125,7 +126,7 @@ class BookingOut(BookingBase):
     updated_at: Optional[datetime]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class PaymentBase(BaseModel):
@@ -199,8 +200,11 @@ class PageSectionOut(PageSectionBase):
         from_attributes = True
 
 class Token(BaseModel):
+    success: bool
+    message: str
     access_token: str
     token_type: str
+    user: UserBase
 
 class TokenData(BaseModel):
     sub: Optional[str] = None

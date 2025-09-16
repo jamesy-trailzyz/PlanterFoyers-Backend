@@ -25,6 +25,7 @@ def list_users(db: Session = Depends(get_db)):
     return db.query(models.User).all()
 
 
+
 @router.get("/{user_id}", response_model=schemas.UserOut)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).get(user_id)

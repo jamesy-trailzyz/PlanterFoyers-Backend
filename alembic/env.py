@@ -1,9 +1,16 @@
+import sys
+import os
 from logging.config import fileConfig
 from sqlalchemy import create_engine, pool
 from alembic import context
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+
 from app.database import Base
 from app import models
 from app.config import settings  # ✅ your settings with safe DB URL
+
 
 # Alembic Config
 config = context.config

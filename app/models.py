@@ -19,6 +19,9 @@ class Role(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     deleted_at = Column(DateTime, nullable=True)
 
+    # Relationship
+    role_permissions = relationship("RolePermission", back_populates="role", cascade="all, delete-orphan")
+
 
 class Permission(Base):
     __tablename__ = "permissions"
@@ -28,6 +31,7 @@ class Permission(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+    role_permissions = relationship("RolePermission", back_populates="permission", cascade="all, delete-orphan")
 
 class RolePermission(Base):
     __tablename__ = "role_permissions"
@@ -37,29 +41,8 @@ class RolePermission(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-
-# -------------------
-# Users
-# -------------------
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(225))
-    email = Column(String(255), unique=True, index=True)
-    password = Column(String(255))
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-    deleted_at = Column(DateTime, nullable=True)
-
-
-class UserRole(Base):
-    __tablename__ = "user_roles"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"))
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-    deleted_at = Column(DateTime, nullable=True)
+    role = relationship("Role", back_populates="role_permissions")
+    permission = relationship("Permission", back_populates="role_permissions")
 
 
 # -------------------
@@ -73,8 +56,40 @@ class Guest(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    user = relationship("User", backref="guests")
+    user = relationship("User", back_populates="guests")
 
+
+
+# -------------------
+# Users
+# -------------------
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(225))
+    email = Column(String(255), unique=True, index=True)
+    password = Column(String(255))
+    slug = Column(String(255), nullable=True, unique=True)  
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    deleted_at = Column(DateTime, nullable=True)
+
+    guests = relationship("Guest", back_populates="user")
+    bookings = relationship("Booking", back_populates="user")
+    user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
+
+class UserRole(Base):
+    __tablename__ = "user_roles"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"))
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    deleted_at = Column(DateTime, nullable=True)
+
+    # Relationships
+    user = relationship("User", back_populates="user_roles")
+    role = relationship("Role")
 
 # -------------------
 # Rooms & Availability
@@ -93,6 +108,8 @@ class Room(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+    availabilities = relationship("RoomAvailability", back_populates="room", cascade="all, delete-orphan")
+    bookings = relationship("Booking", back_populates="room")
 
 class RoomAvailability(Base):
     __tablename__ = "room_availability"
@@ -101,9 +118,12 @@ class RoomAvailability(Base):
     room_id = Column(Integer, ForeignKey("rooms.id", ondelete="CASCADE"))
     date = Column(Date, nullable=False)
     is_available = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
 
     # Relationship
-    room = relationship("Room", backref="availability")
+    room = relationship("Room", back_populates="availabilities")
 
 
 # -------------------
@@ -124,9 +144,9 @@ class Booking(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    user = relationship("User", backref="bookings")
-    room = relationship("Room", backref="bookings")
-
+    user = relationship("User", back_populates="bookings")
+    room = relationship("Room", back_populates="bookings")
+    payments = relationship("Payment", back_populates="booking", cascade="all, delete-orphan")
 
 # -------------------
 # Payments
@@ -144,7 +164,7 @@ class Payment(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    booking = relationship("Booking", backref="payments")
+    booking = relationship("Booking", back_populates="payments")
 
 
 # -------------------
@@ -161,6 +181,7 @@ class Template(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+    pages = relationship("Page", back_populates="template", cascade="all, delete-orphan")
 
 class Page(Base):
     __tablename__ = "pages"
@@ -175,8 +196,8 @@ class Page(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    template = relationship("Template", backref="pages")
-
+    template = relationship("Template", back_populates="pages")
+    sections = relationship("PageSection", back_populates="page", cascade="all, delete-orphan")
 
 class PageSection(Base):
     __tablename__ = "page_sections"
@@ -191,4 +212,4 @@ class PageSection(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    page = relationship("Page", backref="sections")
+    page = relationship("Page", back_populates="sections")
